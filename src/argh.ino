@@ -44,14 +44,14 @@ void connectToWifi(){
 }
 
 void connectToService(){
-  
+
   Serial.print("connecting to ");
   Serial.println(host);
-  
+
   if (!client.connect(host, httpsPort)) {
     Serial.println("connection failed");
     return;
-  } 
+  }
 
   if (client.verify(fingerprint, host)) {
     Serial.println("certificate matches");
@@ -71,7 +71,7 @@ String requestUrl(){
                "Connection: close\r\n\r\n");
 
 
-  
+
   Serial.println("request sent");
   while (client.connected()) {
     String line = client.readStringUntil('\n');
@@ -80,7 +80,7 @@ String requestUrl(){
       break;
     }
   }
-  
+
   String line = client.readStringUntil('\n');
   if (line.startsWith("{\"state\":\"success\"")) {
     Serial.println("esp8266/Arduino CI successfull!");
@@ -100,7 +100,7 @@ void setup() {
   String request = requestUrl();
 
   // Use WiFiClientSecure class to create TLS connection
-
+  pinMode('D0', OUTPUT);
   Serial.println("reply was:");
   Serial.println("==========");
   Serial.println(request);
