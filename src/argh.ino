@@ -1,47 +1,21 @@
-/*
- *  HTTP over TLS (HTTPS) example sketch
- *
- *  This example demonstrates how to use
- *  WiFiClientSecure class to access HTTPS API.
- *  We fetch and display the status of
- *  esp8266/Arduino project continuous integration
- *  build.
- *
- *  Created by Ivan Grokhotkov, 2015.
- *  This example is in public domain.
- */
+#include <FS.h>                   //this needs to be first, or it all crashes and burns...
 
-#include <ESP8266WiFi.h>
+#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+
+//needed for library
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <WiFiClientSecure.h>
-
-const char* ssid = "";
-const char* password = "";
-
-const char* host = "api.github.com";
-const int httpsPort = 443;
-
-// Use web browser to view and copy
-// SHA1 fingerprint of the certificate
-const char* fingerprint = "CF 05 98 89 CA FF 8E D8 5E 5C E0 C2 E4 F7 E6 C3 C7 50 DD 5C";
 
 WiFiClientSecure client;
 
-void connectToWifi();
 void connectToService();
-String requestUrl();
+void wifi();
 
-void connectToWifi(){
-  Serial.print("connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("WiFi connected - IP address: ");
-  Serial.println(WiFi.localIP());
-}
+const char* host = "api.github.com";
+const int httpsPort = 443;
+const char* fingerprint = "CF 05 98 89 CA FF 8E D8 5E 5C E0 C2 E4 F7 E6 C3 C7 50 DD 5C";
 
 void connectToService(){
 
@@ -60,7 +34,7 @@ void connectToService(){
   }
 }
 
-String requestUrl(){
+  String makeRequest(){
   String url = "/repos/esp8266/Arduino/commits/master/status";
   Serial.print("requesting URL: ");
   Serial.println(url);
@@ -91,16 +65,46 @@ String requestUrl(){
   return line;
 }
 
+void wifi(){
+  //WiFiManager
+  //Local intialization. Once its business is done, there is no need to keep it around
+  WiFiManager wifiManager;
+
+  //exit after config instead of connecting
+  //wifiManager.setBreakAfterConfig(true);
+
+  //reset settings - for testing
+  //wifiManager.resetSettings();
+
+
+  //tries to connect to last known settings
+  //if it does not connect it starts an access point with the specified name
+  //here  "AutoConnectAP" with password "password"
+  //and goes into a blocking loop awaiting configuration
+  if (!wifiManager.autoConnect("NodeMcu-Esp8266", "password")) {
+    Serial.println("failed to connect, we should reset as see if it connects");
+    delay(3000);
+    ESP.reset();
+    delay(5000);
+  }
+
+  //if you get here you have connected to the WiFi
+  Serial.println("connected...yeey :)");
+
+
+  Serial.println("local ip");
+  Serial.println(WiFi.localIP());
+
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println();
-
-  connectToWifi();
+  wifi();
   connectToService();
-  String request = requestUrl();
+  String request = makeRequest();
 
   // Use WiFiClientSecure class to create TLS connection
-  pinMode('D0', OUTPUT);
   Serial.println("reply was:");
   Serial.println("==========");
   Serial.println(request);
@@ -108,6 +112,6 @@ void setup() {
   Serial.println("closing connection");
 }
 
-
 void loop() {
+  // put your main code here, to run repeatedly:
 }
